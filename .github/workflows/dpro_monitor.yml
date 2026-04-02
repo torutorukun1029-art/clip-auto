@@ -33,6 +33,8 @@ jobs:
           gog --version
 
       - name: Setup gog credentials
+        env:
+          GOG_KEYRING_PASSWORD: "ci"
         run: |
           # keyringをfileモードに（CI用）
           gog auth keyring file
@@ -48,6 +50,8 @@ jobs:
           gog auth list
 
       - name: Run dpro_monitor.py
+        env:
+          GOG_KEYRING_PASSWORD: "ci"
         run: python dpro_monitor.py
 
       - name: Commit state files
