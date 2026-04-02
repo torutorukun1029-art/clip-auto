@@ -1,0 +1,63 @@
+name: DPro Monitor
+
+on:
+  schedule:
+    # 毎日 11:30 JST = 02:30 UTC
+    - cron: "30 2 * * *"
+  workflow_dispatch: # 手動実行用
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    env:
+      DPRO_EMAIL: ${{ secrets.DPRO_EMAIL }}
+      DPRO_PASSWORD: ${{ secrets.DPRO_PASSWORD }}
+      CHATWORK_API_TOKEN: ${{ secrets.CHATWORK_API_TOKEN }}
+      CHATWORK_ROOM_ID: ${{ secrets.CHATWORK_ROOM_ID }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install gog CLI
+        run: |
+          GOG_VERSION="0.12.0"
+          curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${GOG_VERSION}/gogcli-${GOG_VERSION}-linux-amd64" -o /usr/local/bin/gog
+          chmod +x /usr/local/bin/gog
+          gog --version
+
+      - name: Setup gog credentials
+        run: |
+          # keyringをfileモードに（CI用）
+          gog auth keyring file
+          # OAuth client credentials
+          CONFIG_DIR="$HOME/.config/gogcli"
+          mkdir -p "$CONFIG_DIR"
+          echo '${{ secrets.GOG_CREDENTIALS_JSON }}' > "$CONFIG_DIR/credentials.json"
+          # Refresh token import
+          echo '${{ secrets.GOG_REFRESH_TOKEN }}' > /tmp/gog_token.json
+          gog auth tokens import /tmp/gog_token.json
+          rm /tmp/gog_token.json
+          # 確認
+          gog auth list
+
+      - name: Run dpro_monitor.py
+        run: python dpro_monitor.py
+
+      - name: Commit state files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_ads.json buzz_notified.json
+          if git diff --cached --quiet; then
+            echo "No state changes to commit"
+          else
+            git commit -m "chore: update state files [skip ci]"
+            git push
+          fi

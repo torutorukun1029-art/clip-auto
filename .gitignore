@@ -1,0 +1,12 @@
+venv/
+clip_env/
+__pycache__/
+*.pyc
+.env
+client_secret.json
+token.json
+mikami_ads_raw.json
+shorts_data.json
+*.log
+clips/
+.claude/

@@ -1,0 +1,94 @@
+[
+  {
+    "label": "みかみ",
+    "search_keywords": ["みかみ", "アドネス", "スキルプラス"],
+    "advertiser_names": ["アドネス株式会社", "スキルプラス", "みかみ@AI活用の専門家"]
+  },
+  {
+    "label": "かずくん",
+    "search_keywords": ["AI ONE"],
+    "advertiser_names": ["株式会社AI ONE"]
+  },
+  {
+    "label": "プロパゲート",
+    "search_keywords": ["プロパゲート"],
+    "advertiser_names": ["株式会社プロパゲート"]
+  },
+  {
+    "label": "動画編集CAMP",
+    "search_keywords": ["動画編集CAMP", "アズール"],
+    "advertiser_names": ["アズール株式会社"]
+  },
+  {
+    "label": "web集客まるなげ君",
+    "search_keywords": ["WeeAre", "Degias", "ワガママ採用"],
+    "advertiser_names": ["株式会社WeeAre", "株式会社Degias"]
+  },
+  {
+    "label": "リソースクリエイション",
+    "search_keywords": ["リソースクリエイション"],
+    "advertiser_names": ["株式会社リソースクリエイション"]
+  },
+  {
+    "label": "トレプロ",
+    "search_keywords": ["TLPC", "トレプロ"],
+    "advertiser_names": ["TLPC株式会社"]
+  },
+  {
+    "label": "Talentia",
+    "search_keywords": ["Talentia"],
+    "advertiser_names": ["株式会社Giver of Courage"]
+  },
+  {
+    "label": "Give",
+    "search_keywords": ["Give"],
+    "advertiser_names": ["株式会社Give"]
+  },
+  {
+    "label": "WSSクラス",
+    "search_keywords": ["WSS CLASS"],
+    "advertiser_names": ["WSS CLASS"]
+  },
+  {
+    "label": "SNSマーケ研究室",
+    "search_keywords": ["SNSマーケ研究室", "SONOMAMA", "インフルエンサー発掘プロジェクト", "フリーランス育成"],
+    "advertiser_names": ["株式会社メディアエイド"]
+  },
+  {
+    "label": "Driven Properties",
+    "search_keywords": ["Driven Properties", "ドリブン・プロパティーズ"],
+    "advertiser_names": ["Driven Properties", "ドリブン・プロパティーズ"],
+    "product_names": ["Driven Properties", "ドリブン・プロパティーズ"]
+  },
+  {
+    "label": "Be Prime",
+    "search_keywords": ["Be Prime", "BePrime", "アウトロー求人"],
+    "advertiser_names": ["株式会社Be Prime", "Beprime Co., Ltd.", "eprime Co., Ltd."],
+    "product_names": ["BePrime", "殿様採用", "アウトロー求人"]
+  },
+  {
+    "label": "シックスレイズ",
+    "search_keywords": ["シックスレイズ", "アドレイズプラス"],
+    "advertiser_names": ["株式会社リソースクリエイション"]
+  },
+  {
+    "label": "freee",
+    "search_keywords": ["freee", "フリー", "freee会計", "freee人事労務"],
+    "advertiser_names": ["フリー株式会社"]
+  },
+  {
+    "label": "楽待",
+    "search_keywords": ["楽待", "RAKUMACHI"],
+    "advertiser_names": ["楽待株式会社"]
+  },
+  {
+    "label": "おさる",
+    "search_keywords": ["おさる", "おさるマーケ大学", "マーケターおさる"],
+    "advertiser_names": ["株式会社LEC", "式会社LEC", "イングリッシュブートキャンプ株式会社"]
+  },
+  {
+    "label": "LEC",
+    "search_keywords": ["LEC", "LECマスターブートキャンプ"],
+    "advertiser_names": ["株式会社LEC", "式会社LEC"]
+  }
+]
