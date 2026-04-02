@@ -28,7 +28,7 @@ jobs:
       - name: Install gog CLI
         run: |
           GOG_VERSION="0.12.0"
-          curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${GOG_VERSION}/gogcli-${GOG_VERSION}-linux-amd64" -o /usr/local/bin/gog
+          curl -fsSL "https://github.com/steipete/gogcli/releases/download/v${GOG_VERSION}/gogcli_${GOG_VERSION}_linux_amd64.tar.gz" | tar xz -C /usr/local/bin gog
           chmod +x /usr/local/bin/gog
           gog --version
 
