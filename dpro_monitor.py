@@ -60,7 +60,7 @@ def append_to_sheets(ads, sheet_name):
     for ad in ads:
         company = ad.get("product_name") or ad.get("advertiser_name") or ""
         transcript = ad.get("ad_all_sentence") or ""
-        url = ad.get("production_url") or ""
+        url = ad.get("production_share_url") or ad.get("production_url") or ""
         play_count = str(pc(ad.get("play_count", 0)))
         rows.append([company, transcript, url, play_count, today])
     values_json = json.dumps(rows, ensure_ascii=False)
@@ -177,7 +177,7 @@ def build_new(label, ads):
         lines.append(f"👤 {ad.get('product_name') or ad.get('advertiser_name')}")
         lines.append(f"📅 {ad.get('creation_time', '')}")
         lines.append(f"▶️ 再生数: {pc(ad.get('play_count')):,}")
-        lines.append(f"🎬 {ad.get('production_url', '')}")
+        lines.append(f"🎬 {ad.get('production_share_url') or ad.get('production_url', '')}")
     lines.append("━━━━━━━━━━━━━━━")
     lines.append("[/info]")
     return "\n".join(lines)
@@ -192,7 +192,7 @@ def build_buzz(ads):
         lines.append("━━━━━━━━━━━━━━━")
         lines.append(f"👤 {ad['label']}｜{ad.get('product_name') or ad.get('advertiser_name')}")
         lines.append(f"📈 再生数: {pc(ad.get('play_count')):,}（直近+{pc(ad.get('play_count_difference')):,}）")
-        lines.append(f"🎬 {ad.get('production_url', '')}")
+        lines.append(f"🎬 {ad.get('production_share_url') or ad.get('production_url', '')}")
     lines += ["━━━━━━━━━━━━━━━", "[/info]"]
     return "\n".join(lines)
 
