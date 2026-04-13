@@ -214,7 +214,7 @@ def find_clips(transcript, num_clips, clip_duration):
 - 感情の動きがないシーン
 
 JSONのみで返してください：
-{{"clips": [{{"start": 開始秒数, "end": 終了秒数, "title": "タイトル2行。1行目\\n2行目の形式で。例：採用費150万が\\n10万になった話", "reason": "選んだ理由", "hook": "視聴者が続きを見たくなる煽り文句20文字以内", "speakers": 動画に登場する人数（整数）}}]}}"""
+{{"clips": [{{"start": 開始秒数, "end": 終了秒数, "title": "タイトル2行。1行目\\n2行目の形式で。合計20文字以内。例：採用費が\\n10万になった話", "reason": "選んだ理由", "hook": "視聴者が続きを見たくなる煽り文句20文字以内", "speakers": 動画に登場する人数（整数）}}]}}"""
 
     response = anthropic_client.messages.create(
         model="claude-opus-4-5",
