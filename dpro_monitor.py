@@ -171,13 +171,13 @@ def check_buzz(items):
 
 def build_new(label, ads):
     today = datetime.now().strftime("%Y/%m/%d %H:%M")
-    lines = [f"[info][title]🆕 {label}｜新着広告通知（{len(ads)}件）｜{today}[/title]"]
+    lines = [f"[info][title]{label}｜新着広告通知（{len(ads)}件）｜{today}[/title]"]
     for ad in ads:
         lines.append("━━━━━━━━━━━━━━━")
-        lines.append(f"👤 {ad.get('product_name') or ad.get('advertiser_name')}")
-        lines.append(f"📅 {ad.get('creation_time', '')}")
-        lines.append(f"▶️ 再生数: {pc(ad.get('play_count')):,}")
-        lines.append(f"🎬 {ad.get('production_share_url') or ad.get('production_url', '')}")
+        lines.append(f"{ad.get('product_name') or ad.get('advertiser_name')}")
+        lines.append(f"投稿日: {ad.get('creation_time', '')}")
+        lines.append(f"再生数: {pc(ad.get('play_count')):,}")
+        lines.append(f"{ad.get('production_share_url') or ad.get('production_url', '')}")
     lines.append("━━━━━━━━━━━━━━━")
     lines.append("[/info]")
     return "\n".join(lines)
@@ -185,15 +185,18 @@ def build_new(label, ads):
 
 def build_buzz(ads):
     today = datetime.now().strftime("%Y/%m/%d %H:%M")
-    lines = [f"[info][title]📈 最近伸びている動画｜{today}[/title]"]
+    lines = [f"[info][title]最近伸びている動画｜{today}[/title]"]
     lines.append("過去の動画の中で最近再生数が伸びています！")
     lines.append("")
     for ad in ads:
         lines.append("━━━━━━━━━━━━━━━")
-        lines.append(f"👤 {ad['label']}｜{ad.get('product_name') or ad.get('advertiser_name')}")
-        lines.append(f"📈 再生数: {pc(ad.get('play_count')):,}（直近+{pc(ad.get('play_count_difference')):,}）")
-        lines.append(f"🎬 {ad.get('production_share_url') or ad.get('production_url', '')}")
-    lines += ["━━━━━━━━━━━━━━━", "[/info]"]
+        lines.append(f"{ad['label']}｜{ad.get('product_name') or ad.get('advertiser_name')}")
+        lines.append(f"再生数: {pc(ad.get('play_count')):,}（直近+{pc(ad.get('play_count_difference')):,}）")
+        lines.append(f"{ad.get('production_share_url') or ad.get('production_url', '')}")
+    lines += ["━━━━━━━━━━━━━━━"]
+    lines.append("スプシに追記しました")
+    lines.append("→ https://docs.google.com/spreadsheets/d/1Rw4Ywsk7LIwmDEhtPdmNwoMW_qID9doH45URV7Klttk/")
+    lines.append("[/info]")
     return "\n".join(lines)
 
 
@@ -287,12 +290,12 @@ def main():
 
     if buzz_ads:
         print(f"\n📈 伸びてる動画 {len(buzz_ads)}件")
-        send_cw(build_buzz(buzz_ads))
         try:
             from buzz_pipeline import process_buzz_ads
             process_buzz_ads(buzz_ads, dry_run=DRY_RUN)
         except Exception as e:
             print(f"❌ buzz_pipeline error: {e}")
+        send_cw(build_buzz(buzz_ads))
     else:
         print("\n✅ 伸びてる動画なし")
 
