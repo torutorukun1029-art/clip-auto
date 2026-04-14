@@ -4,8 +4,11 @@ import json, os, subprocess, importlib.util
 from datetime import datetime, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
+import anthropic
 
 load_dotenv(Path(__file__).parent / ".env")
+
+_anthropic_client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 SHEET_ID = "1Rw4Ywsk7LIwmDEhtPdmNwoMW_qID9doH45URV7Klttk"
 ACCOUNT  = "yotayamaguchi2@gmail.com"
@@ -41,6 +44,46 @@ _align_mod   = _load("05_align_paragraphs.py", "align_mod")
 rewrite          = _rewrite_mod.rewrite
 get_emotion_flow = _emotion_mod.get_emotion_flow
 split_paragraphs = _align_mod.split_paragraphs
+
+
+TARGET_STATE_PROMPT = """以下の競合広告を見てトルトルくん（採用代行サービス）に問い合わせる可能性がある「視聴者の状態」を1文で言語化してください。
+
+ルール：
+・1文・20〜40文字
+・形式：「[抱えている悩み・状況]、[属性]」
+・属性は「中小企業の経営者」または「人事担当者」のいずれかにする
+・採用文脈に置き換える（元広告がAI・フリーランス・ダイエット等でも、採用に困っている経営者・人事の状態として書く）
+・抽象的な感情論ではなく、具体的な状況・課題を入れる
+・装飾記号（鉤括弧・絵文字・**）は付けない
+
+出力例：
+求める人材を確保できず、採用戦略に行き詰っている中小企業の経営者
+高額な求人広告に投資するも、応募が全く来ない人事担当者
+採用広告費の負担が大きく、効果が見えない中小企業の経営者
+
+---
+広告：
+{ad_text}
+
+ターゲット状態を1文だけ出力してください。前置き・補足・改行は不要。"""
+
+
+def get_target_state(ad_text):
+    if not ad_text or len(ad_text) < 10:
+        return ""
+    try:
+        msg = _anthropic_client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=200,
+            messages=[{"role": "user", "content": TARGET_STATE_PROMPT.format(
+                ad_text=ad_text[:1500])}])
+        text = msg.content[0].text.strip()
+        # 前後の鉤括弧や記号を除去
+        text = text.strip("「」\"'`* \n")
+        return text
+    except Exception as e:
+        print(f"  ⚠️ target_state error: {e}")
+        return ""
 
 
 def _gog_metadata():
@@ -135,7 +178,6 @@ def process_buzz_ads(buzz_ads, dry_run=False):
         b_text  = (ad.get("ad_all_sentence") or "").strip()
         url     = ad.get("production_share_url") or ad.get("production_url") or ""
         play    = _pc(ad.get("play_count"))
-        label   = ad.get("label", "")
 
         if not b_text:
             print(f"\n  ⏭️ [{idx}/{len(buzz_ads)}] {company}: 文字起こしなし、スキップ")
@@ -150,6 +192,11 @@ def process_buzz_ads(buzz_ads, dry_run=False):
         else:
             print(f"  → リライト失敗")
 
+        print(f"  🎯 ターゲット状態生成中...")
+        target_state = get_target_state(b_text)
+        if target_state:
+            print(f"  → {target_state}")
+
         print(f"  🧠 感情の流れ生成中...")
         emotion = get_emotion_flow(b_text)
 
@@ -159,7 +206,7 @@ def process_buzz_ads(buzz_ads, dry_run=False):
             if new_b and new_c:
                 b_text, c_text = new_b, new_c
 
-        rows.append([company, b_text, c_text, "", "", url, label, emotion, str(play)])
+        rows.append([company, b_text, c_text, "", "", url, target_state, emotion, str(play)])
 
     if not rows:
         print("\n✅ 追記対象なし")
