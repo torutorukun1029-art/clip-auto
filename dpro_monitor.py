@@ -288,6 +288,11 @@ def main():
     if buzz_ads:
         print(f"\n📈 伸びてる動画 {len(buzz_ads)}件")
         send_cw(build_buzz(buzz_ads))
+        try:
+            from buzz_pipeline import process_buzz_ads
+            process_buzz_ads(buzz_ads, dry_run=DRY_RUN)
+        except Exception as e:
+            print(f"❌ buzz_pipeline error: {e}")
     else:
         print("\n✅ 伸びてる動画なし")
 
