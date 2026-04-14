@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """バズり広告→リライト→感情の流れ→段落整形→週次シートに追記"""
 import json, os, subprocess, importlib.util
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -12,6 +12,18 @@ ACCOUNT  = "yotayamaguchi2@gmail.com"
 
 HEADER = ["会社名", "競合広告原文", "トルトル式全文リライト", "判断",
           "メモ", "動画URL", "ターゲット状態", "感情の流れ", "再生数"]
+
+COLUMN_WIDTHS = [
+    ("A:A", 180),  # 会社名
+    ("B:B", 480),  # 競合広告原文
+    ("C:C", 480),  # トルトル式全文リライト
+    ("D:D", 80),   # 判断
+    ("E:E", 180),  # メモ
+    ("F:F", 240),  # 動画URL
+    ("G:G", 140),  # ターゲット状態
+    ("H:H", 480),  # 感情の流れ
+    ("I:I", 90),   # 再生数
+]
 
 
 def _load(filename, modname):
@@ -51,10 +63,15 @@ def _gog_add_tab(name):
     return r.returncode == 0
 
 
+def _q(tab):
+    """A1記法用にシート名をシングルクォートで囲む（/などの特殊文字対応）"""
+    return "'" + tab.replace("'", "''") + "'"
+
+
 def _gog_append(tab, rows):
     vj = json.dumps(rows, ensure_ascii=False)
     r = subprocess.run(
-        ["gog", "sheets", "append", SHEET_ID, f"{tab}!A:I",
+        ["gog", "sheets", "append", SHEET_ID, f"{_q(tab)}!A:I",
          "--values-json", vj, "-a", ACCOUNT],
         capture_output=True, text=True, timeout=30)
     if r.returncode != 0:
@@ -62,14 +79,36 @@ def _gog_append(tab, rows):
     return r.returncode == 0
 
 
+def _apply_formatting(tab):
+    """列幅と折り返し設定を適用"""
+    for cols, width in COLUMN_WIDTHS:
+        r = subprocess.run(
+            ["gog", "sheets", "resize-columns", SHEET_ID, f"{_q(tab)}!{cols}",
+             "--width", str(width), "-a", ACCOUNT],
+            capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            print(f"  ⚠️ resize {cols}: {r.stderr.strip()}")
+    r = subprocess.run(
+        ["gog", "sheets", "format", SHEET_ID, f"{_q(tab)}!A:I",
+         "--format-json", '{"wrapStrategy":"WRAP","verticalAlignment":"TOP"}',
+         "--format-fields",
+         "userEnteredFormat.wrapStrategy,userEnteredFormat.verticalAlignment",
+         "-a", ACCOUNT],
+        capture_output=True, text=True, timeout=30)
+    if r.returncode != 0:
+        print(f"  ⚠️ format: {r.stderr.strip()}")
+
+
 def ensure_weekly_sheet():
-    iso = datetime.now().isocalendar()
-    name = f"{iso[0]}_W{iso[1]:02d}"
+    today = datetime.now()
+    monday = today - timedelta(days=today.weekday())
+    name = f"{monday.year}_{monday.month}/{monday.day}~"
     tabs = _gog_metadata()
     if name not in tabs:
         print(f"📊 シート「{name}」を新規作成中...")
         if _gog_add_tab(name):
             _gog_append(name, [HEADER])
+            _apply_formatting(name)
             print(f"✅ シート「{name}」作成完了")
     return name
 
