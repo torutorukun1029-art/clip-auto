@@ -316,8 +316,14 @@ def main():
         for label, ads in by_label.items():
             print(f"\n🎉 [{label}] 新着 {len(ads)}件")
             send_cw(build_new(label, ads))
-        # Google Sheetsに追記（全新着を一括）
+        # Google Sheets「新着」に追記
         append_to_sheets(new_ads, sheet_name)
+        # Google Sheets「リライト」にリライト付きで追記
+        try:
+            from buzz_pipeline import process_new_ads
+            process_new_ads(new_ads, dry_run=DRY_RUN)
+        except Exception as e:
+            print(f"❌ new_ads pipeline error: {e}")
     else:
         print("\n✅ 新着なし")
 

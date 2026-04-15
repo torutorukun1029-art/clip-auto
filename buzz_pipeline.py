@@ -144,8 +144,8 @@ def _apply_formatting(tab):
 
 def ensure_weekly_sheet():
     today = datetime.now()
-    monday = today - timedelta(days=today.weekday())
-    name = f"{monday.year}_{monday.month}/{monday.day}~"
+    _, week, _ = today.isocalendar()
+    name = f"{today.year}_W{week:02d}"
     tabs = _gog_metadata()
     if name not in tabs:
         print(f"📊 シート「{name}」を新規作成中...")
@@ -154,6 +154,24 @@ def ensure_weekly_sheet():
             _apply_formatting(name)
             print(f"✅ シート「{name}」作成完了")
     return name
+
+
+def _get_existing_urls(tab):
+    """シートのF列（動画URL）から既存URLを取得"""
+    r = subprocess.run(
+        ["gog", "sheets", "get", SHEET_ID, f"{_q(tab)}!F:F",
+         "-a", ACCOUNT, "-j"],
+        capture_output=True, text=True, timeout=30)
+    urls = set()
+    if r.returncode == 0:
+        try:
+            data = json.loads(r.stdout)
+            for row in data.get("values", [])[1:]:
+                if row and row[0]:
+                    urls.add(row[0])
+        except (json.JSONDecodeError, IndexError):
+            pass
+    return urls
 
 
 def _pc(v):
@@ -165,25 +183,31 @@ def _pc(v):
         return 0
 
 
-def process_buzz_ads(buzz_ads, dry_run=False):
-    """バズり広告に対してリライト→感情→段落整形を実行し、週次シートに追記"""
-    if not buzz_ads:
+def _process_ads(ads, prefix, dry_run=False):
+    """広告に対してリライト→感情→段落整形を実行し、週次シートに追記（URL重複チェック付き）"""
+    if not ads:
         return
 
     tab = ensure_weekly_sheet()
+    existing_urls = _get_existing_urls(tab)
     rows = []
+    skipped = 0
 
-    for idx, ad in enumerate(buzz_ads, 1):
+    for idx, ad in enumerate(ads, 1):
         company = ad.get("label") or ad.get("product_name") or ad.get("advertiser_name") or ""
         b_text  = (ad.get("ad_all_sentence") or "").strip()
         url     = ad.get("production_share_url") or ad.get("production_url") or ""
         play    = _pc(ad.get("play_count"))
 
-        if not b_text:
-            print(f"\n  ⏭️ [{idx}/{len(buzz_ads)}] {company}: 文字起こしなし、スキップ")
+        if url in existing_urls:
+            skipped += 1
             continue
 
-        print(f"\n🔥 [{idx}/{len(buzz_ads)}] {company} ({len(b_text)}文字)")
+        if not b_text:
+            print(f"\n  ⏭️ [{idx}/{len(ads)}] {company}: 文字起こしなし、スキップ")
+            continue
+
+        print(f"\n{prefix} [{idx}/{len(ads)}] {company} ({len(b_text)}文字)")
 
         print(f"  ✏️ リライト中...")
         c_text = rewrite(b_text)
@@ -208,6 +232,9 @@ def process_buzz_ads(buzz_ads, dry_run=False):
 
         rows.append([company, b_text, c_text, "", "", url, target_state, emotion, str(play)])
 
+    if skipped:
+        print(f"  ⏭️ URL重複スキップ: {skipped}件")
+
     if not rows:
         print("\n✅ 追記対象なし")
         return
@@ -219,6 +246,16 @@ def process_buzz_ads(buzz_ads, dry_run=False):
     if _gog_append(tab, rows):
         print(f"\n📊 「{tab}」に{len(rows)}件追記完了")
         print(f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit")
+
+
+def process_buzz_ads(buzz_ads, dry_run=False):
+    """バズり広告のパイプライン"""
+    _process_ads(buzz_ads, "🔥", dry_run)
+
+
+def process_new_ads(new_ads, dry_run=False):
+    """新着広告のパイプライン"""
+    _process_ads(new_ads, "🆕", dry_run)
 
 
 if __name__ == "__main__":
