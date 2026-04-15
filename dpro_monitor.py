@@ -51,18 +51,51 @@ def ensure_monthly_sheet():
     return sheet_name
 
 
+def get_existing_urls(sheet_name):
+    """当月シートから既存URLを取得して重複チェック用のsetを返す"""
+    result = subprocess.run(
+        ["gog", "sheets", "get", SHEETS_ID, f"{sheet_name}!C:C",
+         "-a", GOG_ACCOUNT, "-j"],
+        capture_output=True, text=True)
+    urls = set()
+    if result.returncode == 0:
+        try:
+            data = json.loads(result.stdout)
+            for row in data.get("values", [])[1:]:  # ヘッダー行をスキップ
+                if row and row[0]:
+                    urls.add(row[0])
+        except (json.JSONDecodeError, IndexError):
+            pass
+    return urls
+
+
+# みかみ関連のラベルを統一するマッピング
+MIKAMI_LABELS = {"みかみ", "アドネス", "スキルプラス"}
+
+
+def normalize_label(label):
+    """みかみ関連のラベルは全て「みかみ」に統一"""
+    return "みかみ" if label in MIKAMI_LABELS else label
+
+
 def append_to_sheets(ads, sheet_name):
-    """広告データをGoogle Sheetsに追記する"""
+    """広告データをGoogle Sheetsに追記する（URL重複チェック付き）"""
     if not ads:
         return
+    existing_urls = get_existing_urls(sheet_name)
     today = datetime.now().strftime("%Y/%m/%d")
     rows = []
     for ad in ads:
-        company = ad.get("product_name") or ad.get("advertiser_name") or ""
-        transcript = ad.get("ad_all_sentence") or ""
         url = ad.get("production_share_url") or ad.get("production_url") or ""
+        if url in existing_urls:
+            continue
+        company = normalize_label(ad.get("label", ""))
+        transcript = ad.get("ad_all_sentence") or ""
         play_count = str(pc(ad.get("play_count", 0)))
         rows.append([company, transcript, url, play_count, today])
+    if not rows:
+        print("📊 Google Sheets: 新規追記なし（全て既存）")
+        return
     values_json = json.dumps(rows, ensure_ascii=False)
     result = subprocess.run(
         ["gog", "sheets", "append", SHEETS_ID, f"{sheet_name}!A:E",
