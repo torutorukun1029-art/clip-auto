@@ -273,11 +273,20 @@ def main():
 
         print(f"  [{label}] {len(target_items)}件")
 
-        # 全取得アイテムにラベルを付与してリライト候補に蓄積
+        # 全取得アイテムにラベルを付与し、直近7日以内のものをリライト候補に蓄積
         for item in target_items:
             item["label"] = label
-            if (item.get("ad_all_sentence") or "").strip():
-                all_fetched.append(item)
+            if not (item.get("ad_all_sentence") or "").strip():
+                continue
+            pub = item.get("creation_time", "")
+            if pub:
+                try:
+                    pub_dt = datetime.strptime(pub[:10], "%Y-%m-%d")
+                    if (datetime.now() - pub_dt).days > 7:
+                        continue
+                except ValueError:
+                    pass
+            all_fetched.append(item)
 
         for item in target_items:
             url = item.get("production_url", "")
