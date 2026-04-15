@@ -116,7 +116,7 @@ def _gog_append(tab, rows):
     r = subprocess.run(
         ["gog", "sheets", "append", SHEET_ID, f"{_q(tab)}!A:I",
          "--values-json", vj, "-a", ACCOUNT],
-        capture_output=True, text=True, timeout=30)
+        capture_output=True, text=True, timeout=120)
     if r.returncode != 0:
         print(f"  ❌ append error: {r.stderr.strip()}")
     return r.returncode == 0
@@ -190,62 +190,84 @@ def _process_ads(ads, prefix, dry_run=False):
 
     tab = ensure_weekly_sheet()
     existing_urls = _get_existing_urls(tab)
-    rows = []
-    skipped = 0
 
-    for idx, ad in enumerate(ads, 1):
+    # URL重複を先にフィルタ
+    to_process = []
+    for ad in ads:
+        url = ad.get("production_share_url") or ad.get("production_url") or ""
+        b_text = (ad.get("ad_all_sentence") or "").strip()
+        if url in existing_urls:
+            continue
+        if not b_text:
+            continue
+        to_process.append(ad)
+
+    skipped = len(ads) - len(to_process)
+    if skipped:
+        print(f"  ⏭️ スキップ: {skipped}件（URL重複 or 文字起こしなし）")
+
+    if not to_process:
+        print("\n✅ 追記対象なし")
+        return
+
+    print(f"\n📝 リライト対象: {len(to_process)}件")
+
+    if dry_run:
+        print(f"[DRY-RUN] 「{tab}」に{len(to_process)}件追記予定")
+        return
+
+    written = 0
+    BATCH_SIZE = 5
+    batch = []
+
+    for idx, ad in enumerate(to_process, 1):
         company = ad.get("label") or ad.get("product_name") or ad.get("advertiser_name") or ""
         b_text  = (ad.get("ad_all_sentence") or "").strip()
         url     = ad.get("production_share_url") or ad.get("production_url") or ""
         play    = _pc(ad.get("play_count"))
 
-        if url in existing_urls:
-            skipped += 1
-            continue
+        print(f"\n{prefix} [{idx}/{len(to_process)}] {company} ({len(b_text)}文字)")
 
-        if not b_text:
-            print(f"\n  ⏭️ [{idx}/{len(ads)}] {company}: 文字起こしなし、スキップ")
-            continue
+        try:
+            print(f"  ✏️ リライト中...")
+            c_text = rewrite(b_text)
+            if c_text:
+                print(f"  → リライト{len(c_text)}文字")
+            else:
+                print(f"  → リライト失敗")
 
-        print(f"\n{prefix} [{idx}/{len(ads)}] {company} ({len(b_text)}文字)")
+            print(f"  🎯 ターゲット状態生成中...")
+            target_state = get_target_state(b_text)
+            if target_state:
+                print(f"  → {target_state}")
 
-        print(f"  ✏️ リライト中...")
-        c_text = rewrite(b_text)
-        if c_text:
-            print(f"  → リライト{len(c_text)}文字")
-        else:
-            print(f"  → リライト失敗")
+            print(f"  🧠 感情の流れ生成中...")
+            emotion = get_emotion_flow(b_text)
 
-        print(f"  🎯 ターゲット状態生成中...")
-        target_state = get_target_state(b_text)
-        if target_state:
-            print(f"  → {target_state}")
+            if c_text:
+                print(f"  📐 段落整形中...")
+                new_b, new_c = split_paragraphs(b_text, c_text)
+                if new_b and new_c:
+                    b_text, c_text = new_b, new_c
 
-        print(f"  🧠 感情の流れ生成中...")
-        emotion = get_emotion_flow(b_text)
+            batch.append([company, b_text, c_text or "", "", "", url, target_state, emotion, str(play)])
 
-        if c_text:
-            print(f"  📐 段落整形中...")
-            new_b, new_c = split_paragraphs(b_text, c_text)
-            if new_b and new_c:
-                b_text, c_text = new_b, new_c
+        except Exception as e:
+            print(f"  ❌ 処理エラー（スキップ）: {e}")
+            # エラーでも原文だけは書き込む
+            batch.append([company, b_text, "", "", "", url, "", "", str(play)])
 
-        rows.append([company, b_text, c_text, "", "", url, target_state, emotion, str(play)])
+        # バッチサイズに達したらスプシに書き込み（途中エラーで全件失わない）
+        if len(batch) >= BATCH_SIZE or idx == len(to_process):
+            if _gog_append(tab, batch):
+                written += len(batch)
+                print(f"  💾 {written}/{len(to_process)}件書き込み済み")
+            else:
+                print(f"  ❌ バッチ書き込み失敗（{len(batch)}件）")
+            batch = []
 
-    if skipped:
-        print(f"  ⏭️ URL重複スキップ: {skipped}件")
-
-    if not rows:
-        print("\n✅ 追記対象なし")
-        return
-
-    if dry_run:
-        print(f"\n[DRY-RUN] 「{tab}」に{len(rows)}件追記予定")
-        return
-
-    if _gog_append(tab, rows):
-        print(f"\n📊 「{tab}」に{len(rows)}件追記完了")
-        print(f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit")
+    print(f"\n📊 「{tab}」に{written}件追記完了")
+    print(f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/edit")
 
 
 def process_buzz_ads(buzz_ads, dry_run=False):

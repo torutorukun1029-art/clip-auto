@@ -250,7 +250,7 @@ def main():
     targets       = load_json(TARGETS_FILE, [])
     seen          = load_json(SEEN_FILE, {})
     buzz_notified = load_json(BUZZ_FILE, {})
-    new_ads, buzz_ads = [], []
+    new_ads, buzz_ads, all_fetched = [], [], []
 
     for target in targets:
         label        = target["label"]
@@ -273,6 +273,12 @@ def main():
 
         print(f"  [{label}] {len(target_items)}件")
 
+        # 全取得アイテムにラベルを付与してリライト候補に蓄積
+        for item in target_items:
+            item["label"] = label
+            if (item.get("ad_all_sentence") or "").strip():
+                all_fetched.append(item)
+
         for item in target_items:
             url = item.get("production_url", "")
             if not url or url in seen[label]:
@@ -286,7 +292,6 @@ def main():
                         continue
                 except ValueError:
                     pass
-            item["label"] = label
             new_ads.append(item)
             seen[label].append(url)
 
@@ -294,7 +299,6 @@ def main():
             url = item.get("production_url", "")
             if not url or url in buzz_notified[label]:
                 continue
-            item["label"] = label
             buzz_ads.append(item)
 
     # バズり候補を全体でplay_count_differenceの上位5件に絞る
@@ -318,12 +322,6 @@ def main():
             send_cw(build_new(label, ads))
         # Google Sheets「新着」に追記
         append_to_sheets(new_ads, sheet_name)
-        # Google Sheets「リライト」にリライト付きで追記
-        try:
-            from buzz_pipeline import process_new_ads
-            process_new_ads(new_ads, dry_run=DRY_RUN)
-        except Exception as e:
-            print(f"❌ new_ads pipeline error: {e}")
     else:
         print("\n✅ 新着なし")
 
@@ -335,6 +333,16 @@ def main():
         except Exception as e:
             print(f"❌ buzz_pipeline error: {e}")
         send_cw(build_buzz(buzz_ads))
+
+    # Google Sheets「リライト」: 取得した全広告をパイプライン処理
+    # URL重複チェックで既にリライト済みのものは自動スキップ
+    if all_fetched:
+        print(f"\n📝 リライトパイプライン: {len(all_fetched)}件を処理")
+        try:
+            from buzz_pipeline import process_new_ads
+            process_new_ads(all_fetched, dry_run=DRY_RUN)
+        except Exception as e:
+            print(f"❌ rewrite pipeline error: {e}")
     else:
         print("\n✅ 伸びてる動画なし")
 
