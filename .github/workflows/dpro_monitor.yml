@@ -17,6 +17,7 @@ jobs:
       DPRO_PASSWORD: ${{ secrets.DPRO_PASSWORD }}
       CHATWORK_API_TOKEN: ${{ secrets.CHATWORK_API_TOKEN }}
       CHATWORK_ROOM_ID: ${{ secrets.CHATWORK_ROOM_ID }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
     steps:
       - uses: actions/checkout@v4
