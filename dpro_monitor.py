@@ -23,6 +23,7 @@ BUZZ_TOP_PCT = 0.20
 
 GOG_ACCOUNT  = "yotayamaguchi2@gmail.com"
 SHEETS_ID    = "1_d-H-6C_deAbtDySeC6ywbqQ_tFRZyR5EXR79mwnShE"
+REWRITE_SHEETS_URL = "https://docs.google.com/spreadsheets/d/1Rw4Ywsk7LIwmDEhtPdmNwoMW_qID9doH45URV7Klttk"
 
 
 def ensure_monthly_sheet():
@@ -212,6 +213,7 @@ def build_new(label, ads):
         lines.append(f"再生数: {pc(ad.get('play_count')):,}")
         lines.append(f"{ad.get('production_share_url') or ad.get('production_url', '')}")
     lines.append("━━━━━━━━━━━━━━━")
+    lines.append(f"→ {REWRITE_SHEETS_URL}")
     lines.append("[/info]")
     return "\n".join(lines)
 
@@ -228,7 +230,7 @@ def build_buzz(ads):
         lines.append(f"{ad.get('production_share_url') or ad.get('production_url', '')}")
     lines += ["━━━━━━━━━━━━━━━"]
     lines.append("スプシに追記しました")
-    lines.append(f"→ https://docs.google.com/spreadsheets/d/{SHEETS_ID}/")
+    lines.append(f"→ {REWRITE_SHEETS_URL}")
     lines.append("[/info]")
     return "\n".join(lines)
 
