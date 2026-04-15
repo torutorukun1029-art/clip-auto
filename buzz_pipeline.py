@@ -144,8 +144,8 @@ def _apply_formatting(tab):
 
 def ensure_weekly_sheet():
     today = datetime.now()
-    _, week, _ = today.isocalendar()
-    name = f"{today.year}_W{week:02d}"
+    monday = today - timedelta(days=today.weekday())
+    name = f"{monday.year}_{monday.month}/{monday.day}~"
     tabs = _gog_metadata()
     if name not in tabs:
         print(f"📊 シート「{name}」を新規作成中...")
