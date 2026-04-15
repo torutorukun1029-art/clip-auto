@@ -60,7 +60,22 @@
       "Bash(railway open:*)",
       "Bash(railway volume:*)",
       "Bash(node index.js)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(grep -l \"1人語り\\\\|hitori\\\\|rewrite\" /Users/yotayamaguchi/dpro_notify/.env*)",
+      "Bash(python -c ':*)",
+      "Bash(launchctl list:*)",
+      "Bash(crontab -l)",
+      "Bash(railway add:*)",
+      "Bash(gtimeout 8 railway logs --build)",
+      "Bash(gtimeout 8 railway logs --deployment)",
+      "Bash(railway --help)",
+      "Bash(railway run:*)",
+      "Bash(railway redeploy:*)",
+      "Bash(SEEN_PATH=/tmp/sokuho_test_seen.json railway run --service sokuho-bot node index.js)",
+      "Bash(find ~/sokuho-bot/logs -type f -exec ls -la {} \\\\;)",
+      "Bash(curl -s -X POST https://backboard.railway.com/graphql/v2 -H 'Authorization: Bearer __TRACKED_VAR__' -H 'Content-Type: application/json' -d '{\"query\":\"mutation\\($input: ServiceInstanceUpdateInput!, $serviceId: String!, $environmentId: String\\) { serviceInstanceUpdate\\(serviceId: $serviceId, environmentId: $environmentId, input: $input\\) }\",\"variables\":{\"serviceId\":\"3aaca2d1-9d72-4847-ae91-752d4f17742f\",\"environmentId\":\"c2a29a94-18bf-495d-bfb9-fed0bb3c69ef\",\"input\":{\"cronSchedule\":\"0 2 * * *\"}}}')",
+      "Bash(SEEN_PATH=/tmp/sokuho_test_seen.json node index.js)",
+      "Bash(curl -s -o /tmp/x_api_resp.json -w 'HTTP %{http_code}\\\\n' 'https://api.twitter.com/2/tweets/search/recent?query=AI%20%E6%8E%A1%E7%94%A8%20lang%3Aja%20-is%3Aretweet&max_results=10' -H 'Authorization: Bearer AAAAAAAAAAAAAAAAAAAAAL/W8AEAAAAAVVM76JxvtLK163QEMgFS7rksglw=oJRkWXzHIgU1haO0bg1HU6yqGS6L8ekRpxE2uYBecny3BxlL9v')"
     ]
   }
 }

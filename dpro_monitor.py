@@ -195,7 +195,7 @@ def build_buzz(ads):
         lines.append(f"{ad.get('production_share_url') or ad.get('production_url', '')}")
     lines += ["━━━━━━━━━━━━━━━"]
     lines.append("スプシに追記しました")
-    lines.append("→ https://docs.google.com/spreadsheets/d/1Rw4Ywsk7LIwmDEhtPdmNwoMW_qID9doH45URV7Klttk/")
+    lines.append(f"→ https://docs.google.com/spreadsheets/d/{SHEETS_ID}/")
     lines.append("[/info]")
     return "\n".join(lines)
 
