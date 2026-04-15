@@ -174,7 +174,7 @@ def process_buzz_ads(buzz_ads, dry_run=False):
     rows = []
 
     for idx, ad in enumerate(buzz_ads, 1):
-        company = ad.get("product_name") or ad.get("advertiser_name") or ""
+        company = ad.get("label") or ad.get("product_name") or ad.get("advertiser_name") or ""
         b_text  = (ad.get("ad_all_sentence") or "").strip()
         url     = ad.get("production_share_url") or ad.get("production_url") or ""
         play    = _pc(ad.get("play_count"))
